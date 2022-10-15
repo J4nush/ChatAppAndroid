@@ -10,7 +10,8 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="#FFFFFF">
 
         <TextView
             android:id="@+id/roomNameTextView"
@@ -18,7 +19,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="8dp"
+            android:fontFamily="sans-serif"
             android:text="ROOM_NAME"
+            android:textColor="#020202"
             android:textSize="20sp"
             app:layout_constraintBottom_toTopOf="@+id/roomHintTextView"
             app:layout_constraintEnd_toEndOf="parent"
@@ -31,7 +34,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
+            android:fontFamily="sans-serif"
             android:text="Kliknij, by dołączyć"
+            android:textAlignment="center"
+            android:textColor="#000000"
             android:textSize="16sp"
             app:layout_constraintBottom_toTopOf="@+id/usersInRoomTextView"
             app:layout_constraintEnd_toEndOf="parent"
@@ -42,7 +48,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
+            android:fontFamily="sans-serif-thin"
             android:text="USERS_IN_ROOM"
+            android:textColor="#000000"
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

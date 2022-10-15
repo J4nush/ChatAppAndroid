@@ -51,7 +51,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         messages = new ArrayList<>();
 
         // Default encourage message sent every time a user joins a chat room.
-        messages.add(new Message("Mr. Smith", "Hey! Welcome to the chat!"));
+        messages.add(new Message("Bot", "Hey! Welcome to the chat!"));
     }
 
     /**

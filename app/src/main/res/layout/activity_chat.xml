@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/purple_700"
     tools:context=".ChatActivity">
 
     <Button
@@ -12,7 +13,12 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
+        android:fontFamily="sans-serif"
         android:text="Wyślij"
+        android:textColor="#FFF8F8"
+        android:textColorHighlight="#FAFAFA"
+        android:textColorHint="#FFFFFF"
+        android:textColorLink="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -24,8 +30,11 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:ems="10"
-        android:inputType="textPersonName"
+        android:fontFamily="sans-serif"
         android:hint="Wiadomość"
+        android:inputType="textPersonName"
+        android:textColor="#FBFBFB"
+        android:textColorHint="#918F8F"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/sendButton"
         app:layout_constraintStart_toStartOf="parent" />
