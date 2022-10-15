@@ -4,8 +4,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -58,27 +60,35 @@ public class MainActivity extends AppCompatActivity {
         nameEditText = findViewById(R.id.nameEditText);
         errTextView = findViewById(R.id.errTextView);
 
+        // Setting Up Refreshing with Swipe
+        SwipeRefreshLayout refreshLayout = findViewById(R.id.refreshLayout);
+        refreshLayout.setOnRefreshListener(this::loadRooms);
+
+        // Getting saved data
+        SharedPreferences preferences = getSharedPreferences("_", MODE_PRIVATE);
+        String connectedRoomId = preferences.getString("connected_room_id", null);
+        String connectedRoomName = preferences.getString("connected_room_name", null);
+        String connectedUserId = preferences.getString("connected_user_id", null);
+
         // Should the room be opened on app creation?
-        if (getIntent().getExtras() != null && getIntent().getExtras().containsKey("room")) {
-            Log.d(TAG, "onCreate: ROOM PRESENT: " + getIntent().getStringExtra("room"));
+        if (connectedRoomId != null && connectedRoomName != null) {
+            Log.d(TAG, "onCreate: User UUID " + connectedUserId);
 
-            String userId = getSharedPreferences("_", MODE_PRIVATE).getString("fcm_user_id", null);
-
-            if (userId != null) {
-                String roomId = getIntent().getStringExtra("room");
-                Log.d(TAG, "onCreate: ROOM PRESENT: " + userId);
-
-                // Starting chat activity.
-                Intent chat = new Intent(MainActivity.this, ChatActivity.class);
-                chat.putExtra("userId", userId);
-                chat.putExtra("roomId", roomId);
-                startActivity(chat);
-            }
-
-            return;
+            Intent chat = new Intent(MainActivity.this, ChatActivity.class);
+            chat.putExtra("userId", connectedUserId);
+            chat.putExtra("roomId", connectedRoomId);
+            chat.putExtra("roomName", connectedRoomName);
+            startActivity(chat);
         }
+    }
 
-        // Checking Internet connection.
+    @Override
+    protected void onResume() {
+        this.loadRooms();
+        super.onResume();
+    }
+
+    private void loadRooms() {
         AsyncTask.execute( () -> {
             Utils.checkInternetConnection(MainActivity.this,
                     suc -> {
@@ -90,7 +100,6 @@ public class MainActivity extends AppCompatActivity {
                         errTextView.setVisibility(View.VISIBLE);
                     } );
         } );
-
     }
 
     private RecyclerView recyclerView;
@@ -99,15 +108,16 @@ public class MainActivity extends AppCompatActivity {
 
     // Download all the rooms from the Web Chat Server.
     private void initializeRooms() {
-
-        AsyncRequest roomsReq = new GetRequest("http://Chat-env.eba-afmawu2f.eu-central-1.elasticbeanstalk.com/api/v1/room");
+        String url = String.format("%s/api/v1/room", Constants.API_URL);
+        AsyncRequest roomsReq = new GetRequest(url);
         roomsReq.setOnResponse( roomsRes -> {
 
             String id, name;
+            int usersInRoom;
+
             List<Room> rooms = new ArrayList<>();
 
             try {
-
                 JSONArray arr = new JSONArray(roomsRes.body().string());
                 JSONObject obj;
 
@@ -115,7 +125,9 @@ public class MainActivity extends AppCompatActivity {
                     obj = arr.getJSONObject(i);
                     id = obj.getString("id");
                     name = obj.getString("name");
-                    rooms.add(new Room(id, name));
+                    usersInRoom = obj.getJSONArray("users").length();
+                    Log.d(TAG, "initializeRooms: Users in room: " + usersInRoom);
+                    rooms.add(new Room(id, name, usersInRoom));
                 }
 
             } catch (JSONException | IOException e) {
@@ -153,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
         String name = nameEditText.getText().toString();
 
         // Creates a user on the backend side.
-        AsyncRequest userReq = new PostRequest("http://<URL>/api/v1/user",
+        AsyncRequest userReq = new PostRequest("http://54.38.53.128:5000/api/v1/user",
                 "{\"name\": \"" + name + "\", \"token\": \"" + token + "\"}");
         userReq.setOnResponse( userRes -> {
 
@@ -172,12 +184,25 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "connectToRoom: " + userViewModel.getUuid().getValue());
 
             // Adds user to the room on backend side.
-            AsyncRequest joinRequest = new PutRequest(String.format("http://<URL>/api/v1/room/%s/%s", userId, room.getId()), "");
+            String finalUserId = userId;
+            String url = String.format("%s/api/v1/room/%s/%s", Constants.API_URL, userId, room.getId());
+            AsyncRequest joinRequest = new PutRequest(url, "");
             joinRequest.setOnResponse(joinRes -> {
+
+                // Saving the currently connected room in storage.
+                getSharedPreferences("_", MODE_PRIVATE)
+                        .edit()
+                        .putString("connected_room_id", room.getId())
+                        .putString("connected_room_name", room.getName())
+                        .putString("connected_user_id", finalUserId)
+                        .apply();
+
+                Log.d(TAG, "connectToRoom: Data Saved");
 
                 Intent chat = new Intent(MainActivity.this, ChatActivity.class);
                 chat.putExtra("userId", userViewModel.getUuid().getValue());
                 chat.putExtra("roomId", room.getId());
+                chat.putExtra("roomName", room.getName());
                 startActivity(chat);
 
             } );

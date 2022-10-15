@@ -10,6 +10,7 @@ import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+import java.util.Locale;
 
 import pl.jakub.chatapp.R;
 
@@ -28,11 +29,13 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
 
         private final CardView roomCardView;
         private final TextView roomNameTextView;
+        private final TextView usersInRoomTextView;
 
         public RoomViewHolder(@NonNull View itemView) {
             super(itemView);
             roomCardView = itemView.findViewById(R.id.roomCardView);
             roomNameTextView = itemView.findViewById(R.id.roomNameTextView);
+            usersInRoomTextView = itemView.findViewById(R.id.usersInRoomTextView);
         }
 
         public CardView getRoomCardView() {
@@ -41,6 +44,10 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
 
         public TextView getRoomNameTextView() {
             return roomNameTextView;
+        }
+
+        public TextView getUsersInRoomTextView() {
+            return usersInRoomTextView;
         }
     }
 
@@ -82,6 +89,7 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
         Room room = rooms.get(position);
         holder.getRoomCardView().setOnClickListener( c -> onRoomSelect.onSelect(room) );
         holder.getRoomNameTextView().setText(room.getName());
+        holder.getUsersInRoomTextView().setText(String.format(Locale.ENGLISH, "Online: %d", room.getUsersInRoom()));
     }
 
     @Override

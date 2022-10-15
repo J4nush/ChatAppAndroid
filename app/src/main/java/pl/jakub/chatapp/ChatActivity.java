@@ -36,6 +36,7 @@ public class ChatActivity extends AppCompatActivity {
     // Current user and room id.
     private String userId;
     private String roomId;
+    private String roomName;
 
     // Message textbox input.
     private EditText messageEditText;
@@ -66,9 +67,12 @@ public class ChatActivity extends AppCompatActivity {
         Intent intent = getIntent();
         userId = intent.getStringExtra("userId");
         roomId = intent.getStringExtra("roomId");
+        roomName = intent.getStringExtra("roomName");
 
         messageEditText = findViewById(R.id.messageEditText);
         sendButton = findViewById(R.id.sendButton);
+
+        setTitle(roomName);
 
         prepareRecyclerView();
 
@@ -148,6 +152,7 @@ public class ChatActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         outState.putString("userId", userId);
         outState.putString("roomId", roomId);
+        outState.putString("roomName", roomName);
     }
 
     /**
@@ -160,6 +165,7 @@ public class ChatActivity extends AppCompatActivity {
         super.onRestoreInstanceState(savedInstanceState);
         userId = savedInstanceState.getString("userId");
         roomId = savedInstanceState.getString("roomId");
+        roomName = savedInstanceState.getString("roomName");
     }
 
     // ----
@@ -171,24 +177,26 @@ public class ChatActivity extends AppCompatActivity {
      */
     @Override
     public void onBackPressed() {
-
-        AsyncRequest leaveReq = new PutRequest("http://Chat-env.eba-afmawu2f.eu-central-1.elasticbeanstalk.com/api/v1/room/leave/"
-                + userId + "/" + roomId, "");
+        String url = String.format("%s/api/v1/room/leave/%s/%s", Constants.API_URL, userId, roomId);
+        AsyncRequest leaveReq = new PutRequest(url, "");
 
         // Leaving the room.
         leaveReq.setOnResponse( res -> {
-
             runOnUiThread( () -> {
+                // Saving the currently connected room in storage.
+                getSharedPreferences("_", MODE_PRIVATE)
+                        .edit()
+                        .putString("connected_room_id", null)
+                        .putString("connected_room_name", null)
+                        .putString("connected_user_id", null)
+                        .apply();
 
                 Toast.makeText(this, "Opuszczono pokój", Toast.LENGTH_LONG).show();
                 super.onBackPressed();
-
             } );
-
         } );
 
         leaveReq.run();
-
     }
 
     // ----
@@ -203,8 +211,9 @@ public class ChatActivity extends AppCompatActivity {
             // Get the message from message text box.
             String message = messageEditText.getText().toString();
 
-            // Post the message to Web Chat Server.
-            PostRequest req = new PostRequest("http://Chat-env.eba-afmawu2f.eu-central-1.elasticbeanstalk.com/api/v1/message",
+            // Post the message to Web Chat Server. http://54.38.53.128:5000/api/v1/message
+            String url = String.format("%s/api/v1/message", Constants.API_URL);
+            PostRequest req = new PostRequest(url,
                     String.format("{\"sender\": \"%s\", \"content\": \"%s\"}", userId, message));
             req.setOnResponse( reqRes ->  {
 
@@ -221,5 +230,4 @@ public class ChatActivity extends AppCompatActivity {
         } );
 
     }
-
 }
